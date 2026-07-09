@@ -26,7 +26,9 @@ class User(Base):
     display_name: Mapped[str] = mapped_column(String(100))
     avatar_url: Mapped[str | None] = mapped_column(String(500))
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole), default=UserRole.USER, server_default="user"
+        Enum(UserRole, values_callable=lambda e: [m.value for m in e]),
+        default=UserRole.USER,
+        server_default="user",
     )
     oauth_provider: Mapped[str | None] = mapped_column(String(50))
     oauth_id: Mapped[str | None] = mapped_column(String(255))
