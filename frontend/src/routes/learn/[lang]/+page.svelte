@@ -69,6 +69,7 @@
 	<header class="head">
 		<h1>{langName}</h1>
 		<p>選擇適合的難度，開始分級學習。</p>
+		<a class="vocab-link" href={`/learn/${lang}/vocabulary`}>📖 {langName}單字表 →</a>
 	</header>
 
 	{#if loading}
@@ -123,6 +124,19 @@
 
 	.head p {
 		color: #6b7280;
+	}
+
+	.vocab-link {
+		display: inline-block;
+		margin-top: 0.8rem;
+		color: #111;
+		font-weight: 600;
+		text-decoration: none;
+		font-size: 0.95rem;
+	}
+
+	.vocab-link:hover {
+		text-decoration: underline;
 	}
 
 	.level {
