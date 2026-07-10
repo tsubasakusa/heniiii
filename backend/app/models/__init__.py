@@ -6,6 +6,7 @@ from app.models.vocabulary import Vocabulary
 from app.models.progress import UserProgress
 from app.models.crossword import CrosswordPuzzle, CrosswordStatus, CrosswordSubmission
 from app.models.flashcard import FlashcardDeck, FlashcardItem
+from app.models.article import Article, ArticleStatus
 
 __all__ = [
     "User",
@@ -21,4 +22,6 @@ __all__ = [
     "CrosswordSubmission",
     "FlashcardDeck",
     "FlashcardItem",
+    "Article",
+    "ArticleStatus",
 ]

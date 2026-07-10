@@ -23,6 +23,7 @@
 			<span class="admin-title">後台管理</span>
 			<a href="/admin/lessons" class:active={path.startsWith('/admin/lessons')}>課程管理</a>
 			<a href="/admin/vocabulary" class:active={path.startsWith('/admin/vocabulary')}>單字管理</a>
+			<a href="/admin/articles" class:active={path.startsWith('/admin/articles')}>文章管理</a>
 		</nav>
 		<slot />
 	</div>
