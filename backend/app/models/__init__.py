@@ -4,6 +4,7 @@ from app.models.difficulty import DifficultyLevel
 from app.models.lesson import Lesson, LessonStatus
 from app.models.vocabulary import Vocabulary
 from app.models.progress import UserProgress
+from app.models.crossword import CrosswordPuzzle, CrosswordStatus, CrosswordSubmission
 
 __all__ = [
     "User",
@@ -14,4 +15,7 @@ __all__ = [
     "LessonStatus",
     "Vocabulary",
     "UserProgress",
+    "CrosswordPuzzle",
+    "CrosswordStatus",
+    "CrosswordSubmission",
 ]
