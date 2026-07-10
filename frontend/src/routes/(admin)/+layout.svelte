@@ -21,9 +21,13 @@
 	<div class="admin-shell">
 		<nav class="admin-nav">
 			<span class="admin-title">後台管理</span>
+			<a href="/admin" class:active={path === '/admin'}>儀表板</a>
 			<a href="/admin/lessons" class:active={path.startsWith('/admin/lessons')}>課程管理</a>
 			<a href="/admin/vocabulary" class:active={path.startsWith('/admin/vocabulary')}>單字管理</a>
 			<a href="/admin/articles" class:active={path.startsWith('/admin/articles')}>文章管理</a>
+			{#if $currentUser?.role === 'admin'}
+				<a href="/admin/users" class:active={path.startsWith('/admin/users')}>使用者</a>
+			{/if}
 		</nav>
 		<slot />
 	</div>
