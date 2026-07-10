@@ -9,6 +9,7 @@ from app.models.user import User
 from app.schemas.learn import (
     CompleteLessonRequest,
     DifficultyLevelResponse,
+    LanguageResponse,
     LessonDetail,
     LessonSummary,
     ProgressResponse,
@@ -61,6 +62,11 @@ async def complete_lesson(
 
 
 # --- catalogue browsing (public) ---
+
+@router.get("/languages", response_model=list[LanguageResponse])
+async def get_languages(db: AsyncSession = Depends(get_db)):
+    return await learning_service.list_languages(db)
+
 
 @router.get("/{lang}/levels", response_model=list[DifficultyLevelResponse])
 async def get_levels(lang: str, db: AsyncSession = Depends(get_db)):

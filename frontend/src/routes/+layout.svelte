@@ -15,6 +15,9 @@
 			<a href="/leaderboard">排行榜</a>
 			<a href="/blog">部落格</a>
 			<a href="/search">搜尋</a>
+			{#if $currentUser?.role === 'admin' || $currentUser?.role === 'editor'}
+				<a href="/admin/lessons" class="admin-link">後台</a>
+			{/if}
 		</div>
 
 		<div class="nav-auth">
@@ -86,6 +89,11 @@
 		color: white !important;
 		padding: 0.5rem 1rem;
 		border-radius: 6px;
+	}
+
+	.admin-link {
+		font-weight: 600;
+		color: #111 !important;
 	}
 
 	button {

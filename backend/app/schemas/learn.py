@@ -7,6 +7,15 @@ from pydantic import BaseModel
 LessonStatusLiteral = Literal["draft", "published"]
 
 
+class LanguageResponse(BaseModel):
+    id: int
+    code: str
+    name_zh: str
+    display_system: str
+
+    model_config = {"from_attributes": True}
+
+
 class DifficultyLevelResponse(BaseModel):
     id: int
     slug: str

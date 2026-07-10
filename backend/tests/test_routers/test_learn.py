@@ -70,6 +70,15 @@ async def user_auth():
 
 
 @pytest.mark.asyncio
+async def test_get_languages_public(client, seeded):
+    resp = await client.get("/learn/languages")
+    assert resp.status_code == 200
+    codes = {lang["code"] for lang in resp.json()}
+    assert codes == {"en", "ja", "tailo"}
+    assert all("id" in lang for lang in resp.json())
+
+
+@pytest.mark.asyncio
 async def test_get_levels_public(client, seeded):
     resp = await client.get("/learn/en/levels")
     assert resp.status_code == 200

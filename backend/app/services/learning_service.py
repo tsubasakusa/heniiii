@@ -39,6 +39,10 @@ class LearningService:
             raise ValueError("Level not found")
         return level
 
+    async def list_languages(self, db: AsyncSession) -> list[Language]:
+        result = await db.execute(select(Language).order_by(Language.id))
+        return list(result.scalars().all())
+
     async def list_levels(self, db: AsyncSession, code: str) -> list[DifficultyLevel]:
         lang = await self._get_language(db, code)
         result = await db.execute(
