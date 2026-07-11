@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +27,16 @@ async def list_puzzles(
     _: User = Depends(require_editor),
 ):
     return await service.admin_list(db)
+
+
+@router.post("/promote")
+async def promote_scheduled(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_editor),
+):
+    """Force-publish any scheduled puzzle whose date has arrived (also runs hourly)."""
+    promoted = await service.promote_scheduled(db, date.today())
+    return {"promoted": promoted}
 
 
 @router.post("", response_model=PuzzleAdminDetail, status_code=status.HTTP_201_CREATED)

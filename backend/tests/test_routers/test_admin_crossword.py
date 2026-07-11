@@ -60,11 +60,11 @@ async def ctx():
         }
 
 
-def _payload(ctx, when: date):
+def _payload(ctx, when: date, status: str = "published"):
     return {
         "language_id": ctx["lang"], "difficulty_id": ctx["diff"],
         "publish_date": when.isoformat(), "grid_data": GRID, "clues": CLUES,
-        "status": "published",
+        "status": status,
     }
 
 
@@ -99,6 +99,34 @@ async def test_duplicate_publish_date_rejected(client, ctx):
     assert a.status_code == 201
     b = await client.post("/admin/crossword", headers=ctx["editor"], json=_payload(ctx, today))
     assert b.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_scheduled_promotes_when_due(client, ctx):
+    today = date.today()
+    # scheduled for today (due) and for next year (not due)
+    due = await client.post("/admin/crossword", headers=ctx["editor"], json=_payload(ctx, today, "scheduled"))
+    future = await client.post(
+        "/admin/crossword", headers=ctx["editor"],
+        json=_payload(ctx, today.replace(year=today.year + 1), "scheduled"),
+    )
+    assert due.status_code == 201 and future.status_code == 201
+
+    # a scheduled puzzle is not yet the public daily puzzle
+    assert (await client.get("/daily/today")).json()["puzzle"] is None
+
+    promote = await client.post("/admin/crossword/promote", headers=ctx["editor"])
+    assert promote.json()["promoted"] == 1
+
+    # today's puzzle is now live; the future one stays scheduled
+    assert (await client.get("/daily/today")).json()["puzzle"] is not None
+    fut = await client.get(f"/admin/crossword/{future.json()['id']}", headers=ctx["editor"])
+    assert fut.json()["status"] == "scheduled"
+
+
+@pytest.mark.asyncio
+async def test_promote_requires_editor(client, ctx):
+    assert (await client.post("/admin/crossword/promote", headers=ctx["user"])).status_code == 403
 
 
 @pytest.mark.asyncio

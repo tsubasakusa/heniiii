@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.crossword import (
@@ -192,3 +192,16 @@ class GameService:
         puzzle = await self.admin_get(db, puzzle_id)
         await db.delete(puzzle)
         await db.commit()
+
+    async def promote_scheduled(self, db: AsyncSession, today: date) -> int:
+        """Publish any 'scheduled' puzzle whose date has arrived. Returns count."""
+        result = await db.execute(
+            update(CrosswordPuzzle)
+            .where(
+                CrosswordPuzzle.status == CrosswordStatus.SCHEDULED,
+                CrosswordPuzzle.publish_date <= today,
+            )
+            .values(status=CrosswordStatus.PUBLISHED)
+        )
+        await db.commit()
+        return result.rowcount or 0

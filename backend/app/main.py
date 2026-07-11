@@ -1,3 +1,6 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,8 +11,25 @@ from app.routers.admin import crossword as admin_crossword
 from app.routers.admin import dashboard as admin_dashboard
 from app.routers.admin import lessons as admin_lessons
 from app.routers.admin import vocabulary as admin_vocabulary
+from app.scheduler import run_scheduler
 
-app = FastAPI(title="Heniiii API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    stop = asyncio.Event()
+    task = asyncio.create_task(run_scheduler(stop))
+    try:
+        yield
+    finally:
+        stop.set()
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
+app = FastAPI(title="Heniiii API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
