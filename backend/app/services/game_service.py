@@ -10,6 +10,7 @@ from app.models.crossword import (
     CrosswordStatus,
     CrosswordSubmission,
 )
+from app.models.difficulty import DifficultyLevel
 from app.utils.crossword import grade, solution_map
 
 
@@ -97,3 +98,97 @@ class GameService:
         # Reveal the solution only after a submission, for the results view.
         result["solution"] = solution_map(puzzle.grid_data)
         return result
+
+    # ------------------------------------------------------------------ admin
+
+    async def admin_list(self, db: AsyncSession) -> list[CrosswordPuzzle]:
+        result = await db.execute(
+            select(CrosswordPuzzle).order_by(CrosswordPuzzle.publish_date.desc())
+        )
+        return list(result.scalars().all())
+
+    async def admin_get(
+        self, db: AsyncSession, puzzle_id: uuid.UUID
+    ) -> CrosswordPuzzle:
+        puzzle = await db.scalar(
+            select(CrosswordPuzzle).where(CrosswordPuzzle.id == puzzle_id)
+        )
+        if not puzzle:
+            raise ValueError("Puzzle not found")
+        return puzzle
+
+    async def _validate(
+        self, db: AsyncSession, language_id: int, difficulty_id: int
+    ) -> None:
+        level = await db.scalar(
+            select(DifficultyLevel).where(DifficultyLevel.id == difficulty_id)
+        )
+        if not level or level.language_id != language_id:
+            raise ValueError("Difficulty level does not belong to the language")
+
+    async def _assert_date_free(
+        self,
+        db: AsyncSession,
+        publish_date: date,
+        exclude_id: uuid.UUID | None = None,
+    ) -> None:
+        existing = await db.scalar(
+            select(CrosswordPuzzle).where(CrosswordPuzzle.publish_date == publish_date)
+        )
+        if existing and existing.id != exclude_id:
+            raise ValueError("該日期已有題目")
+
+    async def create_puzzle(
+        self,
+        db: AsyncSession,
+        *,
+        created_by: uuid.UUID,
+        language_id: int,
+        difficulty_id: int,
+        publish_date: date,
+        grid_data: dict[str, Any],
+        clues: dict[str, Any],
+        status: str,
+    ) -> CrosswordPuzzle:
+        await self._validate(db, language_id, difficulty_id)
+        await self._assert_date_free(db, publish_date)
+        puzzle = CrosswordPuzzle(
+            created_by=created_by,
+            language_id=language_id,
+            difficulty_id=difficulty_id,
+            publish_date=publish_date,
+            grid_data=grid_data,
+            clues=clues,
+            status=CrosswordStatus(status),
+        )
+        db.add(puzzle)
+        await db.commit()
+        await db.refresh(puzzle)
+        return puzzle
+
+    async def update_puzzle(
+        self, db: AsyncSession, puzzle_id: uuid.UUID, **fields: Any
+    ) -> CrosswordPuzzle:
+        puzzle = await self.admin_get(db, puzzle_id)
+        new_diff = fields.get("difficulty_id")
+        new_lang = fields.get("language_id", puzzle.language_id)
+        if new_diff is not None:
+            await self._validate(db, new_lang, new_diff)
+        if fields.get("publish_date") is not None:
+            await self._assert_date_free(
+                db, fields["publish_date"], exclude_id=puzzle.id
+            )
+        for key, value in fields.items():
+            if value is None:
+                continue
+            if key == "status":
+                value = CrosswordStatus(value)
+            setattr(puzzle, key, value)
+        await db.commit()
+        await db.refresh(puzzle)
+        return puzzle
+
+    async def delete_puzzle(self, db: AsyncSession, puzzle_id: uuid.UUID) -> None:
+        puzzle = await self.admin_get(db, puzzle_id)
+        await db.delete(puzzle)
+        await db.commit()

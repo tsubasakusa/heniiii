@@ -1,5 +1,6 @@
 import uuid
 from datetime import date
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -63,3 +64,41 @@ class SubmitResult(BaseModel):
     is_perfect: bool
     per_cell: dict[str, bool]
     solution: dict[str, str]
+
+
+# --- admin (includes answers) ---
+
+CrosswordStatusLiteral = Literal["draft", "scheduled", "published"]
+
+
+class PuzzleAdminSummary(BaseModel):
+    id: uuid.UUID
+    publish_date: date
+    language_id: int
+    difficulty_id: int
+    status: str
+
+    model_config = {"from_attributes": True}
+
+
+class PuzzleAdminDetail(PuzzleAdminSummary):
+    grid_data: dict[str, Any]
+    clues: dict[str, Any]
+
+
+class PuzzleAdminCreate(BaseModel):
+    language_id: int
+    difficulty_id: int
+    publish_date: date
+    grid_data: dict[str, Any]
+    clues: dict[str, Any]
+    status: CrosswordStatusLiteral = "draft"
+
+
+class PuzzleAdminUpdate(BaseModel):
+    language_id: int | None = None
+    difficulty_id: int | None = None
+    publish_date: date | None = None
+    grid_data: dict[str, Any] | None = None
+    clues: dict[str, Any] | None = None
+    status: CrosswordStatusLiteral | None = None
